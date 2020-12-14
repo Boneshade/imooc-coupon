@@ -1,0 +1,4 @@
+# Project exclude paths
+/coupon-eureka/target/
+/coupon-gateway/target/
+/imooc-coupon-service/coupon-common/target/
