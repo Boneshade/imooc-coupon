@@ -22,7 +22,6 @@ public class TemplateRule {
      **/
     private Expiration expiration;
 
-
     /**
      * 折扣
      **/
