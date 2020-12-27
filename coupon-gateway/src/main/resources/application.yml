@@ -9,3 +9,19 @@ eureka:
   client:
     service-url:
       defaultZone: http://server1:8000/eureka/
+zuul:
+  prefix: /imooc
+  routes:
+    #优惠卷模板微服务路由配置定义
+    template:
+      path: /coupon-template/**
+      serviceId: eureka-client-coupon-template
+      #不过滤怕丢失前缀
+      strip-prefix: false
+  host:
+    connect-timeout-millis: 15000
+    socket-timeout-millis: 60000
+
+ribbon:
+  ConnectTimeout: 150000
+  ReadTimeout: 150000

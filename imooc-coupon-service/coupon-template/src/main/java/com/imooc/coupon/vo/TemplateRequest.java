@@ -8,9 +8,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
-import java.lang.ref.PhantomReference;
-import java.security.KeyStore;
-
 /**
  * <h1>优惠券模板创建请求对象<h1/>
  *

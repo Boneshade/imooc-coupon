@@ -6,6 +6,7 @@ import com.imooc.coupon.constant.DistributeTarget;
 import com.imooc.coupon.constant.ProductLine;
 import com.imooc.coupon.convert.CouponCategoryConverter;
 import com.imooc.coupon.convert.DistributeTargetConverter;
+import com.imooc.coupon.convert.ProductLineConverter;
 import com.imooc.coupon.convert.RuleConverter;
 import com.imooc.coupon.serialization.CouponTemplateSerialize;
 import com.imooc.coupon.vo.TemplateRule;
@@ -85,7 +86,7 @@ public class CouponTemplate implements Serializable {
      * 产品线
      **/
     @Column(name = "product_line", nullable = false)
-    @Convert(converter = ProductLine.class)
+    @Convert(converter = ProductLineConverter.class)
     private ProductLine productLine;
 
 
