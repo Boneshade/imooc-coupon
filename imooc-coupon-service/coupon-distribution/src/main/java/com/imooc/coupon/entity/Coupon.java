@@ -77,7 +77,7 @@ public class Coupon {
      *
      * @return
      */
-    private static Coupon invalidCoupon() {
+    public static Coupon invalidCoupon() {
         Coupon coupon = new Coupon();
         coupon.setId(-1);
         return coupon;
