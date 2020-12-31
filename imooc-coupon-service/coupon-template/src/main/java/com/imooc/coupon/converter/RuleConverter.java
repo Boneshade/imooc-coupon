@@ -1,4 +1,4 @@
-package com.imooc.coupon.convert;
+package com.imooc.coupon.converter;
 
 import com.alibaba.fastjson.JSON;
 import com.imooc.coupon.vo.TemplateRule;

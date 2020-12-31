@@ -1,4 +1,4 @@
-package com.imooc.coupon.convert;
+package com.imooc.coupon.converter;
 
 import com.imooc.coupon.constant.ProductLine;
 

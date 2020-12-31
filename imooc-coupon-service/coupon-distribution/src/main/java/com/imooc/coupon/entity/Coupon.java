@@ -1,6 +1,9 @@
 package com.imooc.coupon.entity;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.imooc.coupon.constant.CouponStatus;
+import com.imooc.coupon.converter.CouponStatusConverter;
+import com.imooc.coupon.serilization.CouponSerialize;
 import com.imooc.coupon.vo.CouponTemplateSDK;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,6 +25,7 @@ import java.util.Date;
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "coupon")
+@JsonSerialize(using = CouponSerialize.class)
 @SuppressWarnings("all")
 public class Coupon {
 
@@ -59,6 +63,7 @@ public class Coupon {
      * 优惠券状态
      **/
     @Column(name = "status", nullable = false)
+    @Convert(converter = CouponStatusConverter.class)
     private CouponStatus status;
 
     /**
