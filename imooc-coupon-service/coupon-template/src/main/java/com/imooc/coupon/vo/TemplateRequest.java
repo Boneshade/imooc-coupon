@@ -48,7 +48,7 @@ public class TemplateRequest {
      */
     public boolean validate() {
 
-        boolean stringValid = StringUtils.isNoneEmpty(name)
+        boolean stringValid = StringUtils.isNotEmpty(name)
                 && StringUtils.isNotEmpty(logo)
                 && StringUtils.isNotEmpty(desc);
         boolean enumValid = null != CouponCategory.of(category)

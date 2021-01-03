@@ -43,7 +43,6 @@ public class BuildTemplateServiceImpl implements IBuildTemplateService {
 
         //参数合法性校验
         if (!request.validate()) {
-
             throw new CouponException("BuildTemplate Param Is Not Valid!");
         }
 

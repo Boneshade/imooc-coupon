@@ -117,7 +117,7 @@ public class CouponTemplate implements Serializable {
     private String key;
 
     /**
-     * 优惠券模板的编码
+     * 优惠券分发的人群
      **/
     @Column(name = "target", nullable = false)
     @Convert(converter = DistributeTargetConverter.class)
