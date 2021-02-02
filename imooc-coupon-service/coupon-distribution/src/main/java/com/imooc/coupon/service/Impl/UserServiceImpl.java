@@ -13,10 +13,13 @@ import com.imooc.coupon.service.IUserService;
 import com.imooc.coupon.vo.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -26,7 +29,6 @@ import java.util.stream.Collectors;
  * 所有的操作过程,状态都保存在Redis中,并通过kafka 把消息传递到Mysql中
  * 为什么使用kafka,而不是直接使用Springboot 中的异步处理？
  * 安全性:异步任务可能会失败,kafka可以回溯消息,
- *
  * @author xubr 2021/1/5
  */
 @Slf4j
@@ -39,7 +41,7 @@ public class UserServiceImpl implements IUserService {
     private final CouponDao couponDao;
 
     /**
-     * Redis 服务
+     * Redis
      */
     private final IRedisService redisService;
 
@@ -73,7 +75,6 @@ public class UserServiceImpl implements IUserService {
 
     /**
      * <h2>根据用户id 和状态查询优惠券记录<h2/>
-     *
      * @param userId 用户id
      * @param status 优惠卷状态
      * @return
@@ -82,6 +83,7 @@ public class UserServiceImpl implements IUserService {
     @Override
     public List<Coupon> findCouponsByStatus(Long userId, Integer status) throws CouponException {
 
+        //此时已经有一张无效的优惠券信息,不必担心缓存穿透问题
         List<Coupon> curCached = redisService.getCachedCoupons(userId, status);
         List<Coupon> preTarget;
 
@@ -133,8 +135,8 @@ public class UserServiceImpl implements IUserService {
                         JSON.toJSONString(new CouponKafkaMessage(
                                 CouponStatus.EXPIRED.getCode(),
                                 couponClassify.getExpired().stream().map(Coupon::getId).collect(Collectors.toList()
-                        ))
-                ));
+                                ))
+                        ));
             }
 
             return couponClassify.getUsable();
@@ -143,9 +145,65 @@ public class UserServiceImpl implements IUserService {
         return preTarget;
     }
 
+    /**
+     * <h2>根据用户的id查找当前可以领取的优惠券模板<h2/>
+     * @param userId
+     * @return
+     * @throws CouponException
+     */
     @Override
     public List<CouponTemplateSDK> findAvailableTemplate(Long userId) throws CouponException {
-        return null;
+
+        long curTime = System.currentTimeMillis();
+        List<CouponTemplateSDK> templateSDKS =
+                templateClient.findAllUsableTemplate().getData();
+
+        log.debug("Find All Template(From TemplateClient) Count :{}",
+                templateSDKS.size());
+
+        //过滤过期的优惠卷模板
+        templateSDKS = templateSDKS.stream().filter(
+                t -> t.getRule().getExpiration().getDeadline() > curTime).collect(Collectors.toList());
+
+        log.info("Find Usable Template Count:{}", templateSDKS.size());
+
+        //key 是TemplateId
+        //value 中的 left  是Template limitation,right 是优惠卷模板
+        Map<Integer, Pair<Integer, CouponTemplateSDK>> limit2Template =
+                new HashMap<>(templateSDKS.size());
+
+        templateSDKS.forEach(t -> limit2Template.put(
+                t.getId(),
+                Pair.of(t.getRule().getLimitation(), t)
+        ));
+
+        List<CouponTemplateSDK> result =
+                new ArrayList<>(limit2Template.size());
+
+        //查找当前用户可用的优惠券模板
+        List<Coupon> userUsableCoupons = findCouponsByStatus(userId, CouponStatus.USABLE.getCode());
+
+        log.debug("Current User Has Usable Coupons:{},{}", userId, userUsableCoupons.size());
+
+        //key 是TemplateId
+        Map<Integer, List<Coupon>> templateIdsCoupons = userUsableCoupons
+                .stream()
+                .collect(Collectors.groupingBy(Coupon::getTemplateId));
+
+        //根据Template 的Rule 判断是否可以领取优惠券模板
+        limit2Template.forEach((k, v) -> {
+
+            int limitation = v.getLeft();
+            CouponTemplateSDK templateSDK = v.getRight();
+            if (templateIdsCoupons.containsKey(k)
+                    && templateIdsCoupons.get(k).size() >= limitation) {
+                return;
+            }
+
+            result.add(templateSDK);
+
+        });
+        return result;
     }
 
     @Override

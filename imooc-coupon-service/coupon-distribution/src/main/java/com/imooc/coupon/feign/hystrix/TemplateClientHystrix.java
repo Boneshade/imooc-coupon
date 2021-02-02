@@ -19,7 +19,6 @@ public class TemplateClientHystrix implements TemplateClient {
 
     /**
      * <h2>查找所有可用的优惠券模板<h2/>
-     *
      * @return
      */
     @Override
@@ -32,7 +31,6 @@ public class TemplateClientHystrix implements TemplateClient {
 
     /**
      * <h2>获取ids 到couponTemplateSDK 的映射<h2/>
-     *
      * @return
      */
     @Override

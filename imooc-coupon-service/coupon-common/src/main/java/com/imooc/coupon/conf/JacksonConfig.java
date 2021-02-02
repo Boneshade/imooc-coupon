@@ -8,7 +8,6 @@ import java.text.SimpleDateFormat;
 
 /**
  * <h1>jackson的自定义配置<h1/>
- *
  * @author xubr 2020/12/6
  */
 @Configuration

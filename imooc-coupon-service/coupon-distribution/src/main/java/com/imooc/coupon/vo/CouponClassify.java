@@ -13,7 +13,6 @@ import java.util.List;
 
 /**
  * <h1>用户优惠券的分类,根据优惠券状态<h1/>
- *
  * @author xubr 2021/1/3
  */
 @Data
@@ -38,7 +37,6 @@ public class CouponClassify {
 
     /**
      * <h2>对当前的优惠券进行分类<h2/>
-     *
      * @param coupons
      * @return
      */
@@ -49,6 +47,7 @@ public class CouponClassify {
         List<Coupon> expired = new ArrayList<>(coupons.size());
 
         coupons.forEach(coupon -> {
+            //判断优惠券是否过期(延迟加载)
             boolean isTimeExpire;
             long curTime = System.currentTimeMillis();
             //Period:有效期规则 REGULAR:固定的
