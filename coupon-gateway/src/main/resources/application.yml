@@ -18,6 +18,11 @@ zuul:
       serviceId: eureka-client-coupon-template
       #不过滤怕丢失前缀
       strip-prefix: false
+      #优惠券分发微服务路由定义
+    distribution:
+      path: /coupon-distribution/**
+      serviceId: eureka-client-coupon-distribution
+      strip-prefix: false
   host:
     connect-timeout-millis: 15000
     socket-timeout-millis: 60000

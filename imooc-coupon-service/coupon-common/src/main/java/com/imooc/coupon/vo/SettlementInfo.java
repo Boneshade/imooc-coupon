@@ -52,6 +52,9 @@ public class SettlementInfo {
     /**
      * 优惠卷和模板信息
      */
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
     public static class CouponAndTemplateInfo {
         /**
          * coupon 的主键

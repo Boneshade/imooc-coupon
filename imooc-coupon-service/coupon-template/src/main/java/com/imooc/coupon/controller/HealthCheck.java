@@ -16,7 +16,6 @@ import java.util.Map;
 
 /**
  * <h1>健康检查接口</h1>
- *
  * @author xubr 2020/12/27
  */
 @Slf4j
@@ -70,7 +69,6 @@ public class HealthCheck {
 
     /**
      * <h2>获取Eureka Server 上的微服务元信息<h2/>
-     *
      * @return
      */
     @GetMapping("/info")

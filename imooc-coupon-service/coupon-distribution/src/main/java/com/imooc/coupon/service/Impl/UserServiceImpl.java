@@ -13,15 +13,16 @@ import com.imooc.coupon.service.IUserService;
 import com.imooc.coupon.vo.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -206,13 +207,171 @@ public class UserServiceImpl implements IUserService {
         return result;
     }
 
+    /**
+     * <h2>用户领取优惠券模板<h2/>
+     * 1.从TemplateClient 拿到对应的优惠券,并检查是否过期
+     * 2.save to db
+     * 3.填充 CouponTemplateSDK
+     * 5.save to Cache
+     * @param request {@link AcquireTemplateRequest}
+     * @return
+     * @throws CouponException
+     */
     @Override
     public Coupon acquireTemplate(AcquireTemplateRequest request) throws CouponException {
-        return null;
+
+        Map<Integer, CouponTemplateSDK> id2Template = templateClient.findIds2TemplateSDK(Collections.singletonList(
+                request.getTemplateSDK().getId()
+        )).getData();
+
+
+        //优惠券模板是需要存在的
+        if (id2Template.size() <= 0) {
+            log.error("Can Not Acquire Template From TemplateClient:{}",
+                    request.getTemplateSDK().getId());
+            throw new CouponException("Can Not Acquire Template From TemplateClient");
+        }
+
+        //用户是否可以领取这张优惠券
+        List<Coupon> userUsableCoupon = findCouponsByStatus(
+                request.getUserId(), CouponStatus.USABLE.getCode()
+        );
+
+        Map<Integer, List<Coupon>> templateId2Coupons = userUsableCoupon.stream().collect(Collectors.groupingBy(Coupon::getTemplateId));
+
+        if (templateId2Coupons.containsKey(request.getTemplateSDK().getId()) &&
+                templateId2Coupons.get(request.getTemplateSDK().getId()).size() >=
+                        request.getTemplateSDK().getRule().getLimitation()) {
+            log.error("Exceed Template Assign Limitation: {}",
+                    request.getTemplateSDK().getId());
+            throw new CouponException("Exceed Template Assign limitation");
+        }
+
+
+        //尝试去获取优惠券码
+        String couponCode = redisService.tryToAcquireCouponCodeFromCache(
+                request.getTemplateSDK().getId()
+        );
+
+        if (StringUtils.isEmpty(couponCode)) {
+            log.error("Can Not Acquire Coupon Code:{}",
+                    request.getTemplateSDK().getId());
+            throw new CouponException("Can Not Acquire Coupon Code");
+        }
+
+        Coupon newCoupon = new Coupon(
+                request.getTemplateSDK().getId(),
+                request.getUserId(),
+                couponCode,
+                CouponStatus.USABLE
+        );
+
+        newCoupon = couponDao.save(newCoupon);
+
+
+        //填充 Coupon 对象的 CouponTemplateSDK，一定要放在缓存之前去填充
+        newCoupon.setTemplateSDK(request.getTemplateSDK());
+
+        //放入缓存
+        redisService.addCouponToCache(
+                request.getUserId(),
+                Collections.singletonList(newCoupon),
+                CouponStatus.USABLE.getCode()
+        );
+
+        return newCoupon;
     }
 
+    /**
+     * <h2>结算(核销)优惠券<h2/>
+     * 这里需要注意,规则相关处理需要由 Settlement 系统去做,当前系统仅仅做业务处理过程
+     * @param info {@link SettlementInfo}
+     * @return
+     * @throws CouponException
+     */
     @Override
     public SettlementInfo settlement(SettlementInfo info) throws CouponException {
-        return null;
+
+        // 当没有传递优惠券时,直接返回商品总价
+        List<SettlementInfo.CouponAndTemplateInfo> ctInfos =
+                info.getCouponAndTemplateInfos();
+
+        if (CollectionUtils.isEmpty(ctInfos)) {
+
+            log.info("Empty Coupons For Settle");
+            double goodsSum = 0.0;
+
+            for (GoodsInfo gi : info.getGoodsInfos()) {
+                goodsSum += gi.getPrice() * gi.getCount();
+            }
+
+            //没有优惠券也就不存在优惠券的核销,SettlementInfo 其他的字段不需要修改
+
+            info.setCost(retain2Decimal(goodsSum));
+        }
+
+        //校验传递的优惠券是否是用户自己的
+        List<Coupon> coupons = findCouponsByStatus(
+                info.getUserId(), CouponStatus.USABLE.getCode()
+        );
+
+        Map<Integer, Coupon> id2Coupon = coupons.stream()
+                .collect(Collectors.toMap(
+                        Coupon::getId,
+                        Function.identity()
+                ));
+        if (MapUtils.isEmpty(id2Coupon) || !CollectionUtils.isSubCollection(
+                ctInfos.stream().map(SettlementInfo.CouponAndTemplateInfo::getId)
+                        .collect(Collectors.toList()), id2Coupon.keySet()
+        )) {
+            log.info("{}", id2Coupon.keySet());
+            log.error("User Coupon Has Some Problem,It Is Not SubCollection" +
+                    "Of Coupons!");
+            throw new CouponException("User Coupon Has Some Problem," + "It is Not SubCollection of Coupons!");
+        }
+        log.debug("Current Settlement Coupos Is User's:{}", ctInfos.size());
+
+        List<Coupon> settleCoupons = new ArrayList<>(ctInfos.size());
+
+        ctInfos.forEach(ci -> settleCoupons.add(id2Coupon.get(ci.getId())));
+
+        //通过结算服务获取结算信息
+        SettlementInfo processedInfo = settlementClient.computeRule(info).getData();
+
+        if (processedInfo.getEmploy() &&
+                CollectionUtils.isNotEmpty(processedInfo.getCouponAndTemplateInfos())) {
+
+            log.info("Settle User Coupon:{},{}", info.getUserId(),
+                    JSON.toJSONString(settleCoupons));
+
+            redisService.addCouponToCache(
+                    info.getUserId(),
+                    settleCoupons,
+                    CouponStatus.USED.getCode()
+            );
+            //更新 db
+            kafkaTemplate.send(Constant.TOPIC,
+                    JSON.toJSONString(new CouponKafkaMessage(
+                            CouponStatus.USED.getCode(),
+                            settleCoupons.stream().map(Coupon::getId)
+                                    .collect(Collectors.toList())
+                    )));
+
+        }
+
+        return processedInfo;
     }
+
+
+    /**
+     * <h2>保留2位小数<h2/>
+     * @param value
+     * @return
+     */
+    private double retain2Decimal(double value) {
+        //BigDecimal.ROUND_HALF_UP 代表四舍五入
+        return new BigDecimal(value).
+                setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+    }
+
 }
