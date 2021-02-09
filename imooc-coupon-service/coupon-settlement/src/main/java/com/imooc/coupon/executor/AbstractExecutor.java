@@ -34,6 +34,7 @@ public abstract class AbstractExecutor {
 
         //存在交集即可
         return CollectionUtils.isNotEmpty(
+                //若有交集会打印出如:[2, 3]
                 CollectionUtils.intersection(goodsType, templateGoodsType));
     }
 

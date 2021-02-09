@@ -6,12 +6,12 @@ import lombok.NoArgsConstructor;
 
 /**
  * <h1>微服务之间用的优惠券模板信息定义<h1/>
- *
  * @author xubr 2020/12/20
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@SuppressWarnings("all")
 public class CouponTemplateSDK {
 
     /**
@@ -35,6 +35,11 @@ public class CouponTemplateSDK {
     private String desc;
 
     /**
+     * 优惠券分类
+     */
+    private String category;
+
+    /**
      * 产品线
      **/
     private Integer productLine;
@@ -55,6 +60,4 @@ public class CouponTemplateSDK {
     private TemplateRule rule;
 
 
-    public CouponTemplateSDK(Integer id, String name, String logo, String desc, String code, Integer code1, String key, Integer code2, TemplateRule rule) {
-    }
 }
