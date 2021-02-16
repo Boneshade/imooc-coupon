@@ -19,5 +19,6 @@ eureka:
     service-url:
       defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
   server:
+    #让eureka自我保护机制关闭(会监听心跳)
     enable-self-preservation: false
 #    renewal-percent-threshold: 0.45
