@@ -27,6 +27,10 @@ public class AnnotationScanner {
 
     private static final String IMOOC_COUPON_PKG = "com.imooc.coupon";
 
+    public AnnotationScanner(String pathPrefix) {
+        this.pathPrefix = trimPath(pathPrefix);
+    }
+
     /**
      * <h2>构造所有 Controller 的权限信息<h2/>
      * @param mappingMap
@@ -151,5 +155,26 @@ public class AnnotationScanner {
         return className.startsWith(IMOOC_COUPON_PKG);
     }
 
+
+    /**
+     * <h2>保证 path 以 / 开头, 且不以 / 结尾</h2>
+     * 如果 user -> /user, /user/ -> /user
+     * */
+    private String trimPath(String path) {
+
+        if (StringUtils.isEmpty(path)) {
+            return "";
+        }
+
+        if (!path.startsWith("/")) {
+            path = "/" + path;
+        }
+
+        if (path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+
+        return path;
+    }
 
 }
