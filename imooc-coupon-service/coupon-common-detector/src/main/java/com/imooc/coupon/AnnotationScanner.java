@@ -126,7 +126,6 @@ public class AnnotationScanner {
 
         }
         return infoList;
-
     }
 
     private PermissionInfo buildPermissionInfo(String reqMethod, String javaMethod, String path,
