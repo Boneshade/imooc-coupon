@@ -5,7 +5,6 @@ import com.imooc.coupon.annotation.ImoocCouponPermission;
 import com.imooc.coupon.vo.PermissionInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.bouncycastle.cert.ocsp.Req;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.method.HandlerMethod;
