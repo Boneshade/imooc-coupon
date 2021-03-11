@@ -5,7 +5,6 @@ import com.imooc.coupon.service.PathService;
 import com.imooc.coupon.service.PermissionService;
 import com.imooc.coupon.vo.CheckPermissionRequest;
 import com.imooc.coupon.vo.CreatePathRequest;
-import com.sun.jnlp.CheckServicePermission;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;

@@ -18,6 +18,7 @@
         <module>coupon-settlement</module>
         <module>coupon-permission-sdk</module>
         <module>coupon-permission-service</module>
+        <module>coupon-common-detector</module>
     </modules>
     <packaging>pom</packaging>
 

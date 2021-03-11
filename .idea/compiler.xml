@@ -9,9 +9,10 @@
         <module name="coupon-eureka" />
         <module name="coupon-template" />
         <module name="coupon-settlement" />
+        <module name="coupon-gateway" />
         <module name="coupon-distribution" />
         <module name="coupon-permission-sdk" />
-        <module name="coupon-gateway" />
+        <module name="coupon-common-detector" />
         <module name="coupon-common" />
         <module name="coupon-permission-service" />
       </profile>
@@ -20,6 +21,7 @@
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="coupon-common" options="-parameters" />
+      <module name="coupon-common-detector" options="-parameters" />
       <module name="coupon-distribution" options="-parameters" />
       <module name="coupon-eureka" options="-parameters" />
       <module name="coupon-gateway" options="-parameters" />
