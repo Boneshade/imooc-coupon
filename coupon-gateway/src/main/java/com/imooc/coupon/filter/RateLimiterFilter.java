@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author xubr 2020/12/6
+ * 率限流服务器
  */
 @Slf4j
 @Component

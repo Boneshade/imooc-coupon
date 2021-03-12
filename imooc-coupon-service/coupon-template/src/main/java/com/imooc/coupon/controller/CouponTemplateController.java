@@ -1,6 +1,8 @@
 package com.imooc.coupon.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.imooc.coupon.annotation.IgnorePermission;
+import com.imooc.coupon.annotation.ImoocCouponPermission;
 import com.imooc.coupon.entity.CouponTemplate;
 import com.imooc.coupon.exception.CouponException;
 import com.imooc.coupon.service.IBuildTemplateService;
@@ -49,6 +51,7 @@ public class CouponTemplateController {
      * @throws CouponException
      */
     @PostMapping("/template/build")
+    @ImoocCouponPermission(description = "buildTemplate", readOnly = false)
     public CouponTemplate buildTemplate(@RequestBody TemplateRequest request) throws CouponException {
         log.info("Build Template: {}", JSON.toJSONString(request));
         return templateService.buildTemplate(request);
@@ -63,6 +66,7 @@ public class CouponTemplateController {
      * @throws CouponException
      */
     @GetMapping("/template/info")
+    @ImoocCouponPermission(description = "buildTemplateInfo")
     public CouponTemplate buildTemplateInfo(@RequestParam("ID") Integer id) throws CouponException {
         log.info("Build Template Info For: {}", JSON.toJSONString(id));
         return templateBaseService.buildTemplateInfo(id);
@@ -76,6 +80,7 @@ public class CouponTemplateController {
      * @return
      */
     @GetMapping("/template/sdk/all")
+    @IgnorePermission
     public List<CouponTemplateSDK> findAllUsableTemplate() {
         log.info("Find All Usable Template");
         return templateBaseService.findAllUsableTemplate();
